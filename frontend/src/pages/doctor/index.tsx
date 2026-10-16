@@ -153,7 +153,7 @@ function PatientPage() {
       {tab === 'Lab Orders' && <LabOrdersTab visitId={visit?.id} patientId={pid} />}
       {tab === 'Reports'       && <ReportsTab patientId={pid} />}
       {tab === 'Prescription'  && visit && <PrescriptionTab visitId={visit.id} />}
-      {tab === 'Patient History'       && <HistoryTab patientId={pid} patient={patient} />}
+      {tab === 'Patient History'       && <HistoryTab patientId={pid} />}
       {!visit && tab !== 'Follow-up' && tab !== 'Overview' && tab !== 'Reports' && tab !== 'Patient History' && tab !== 'Lab Orders' && (
         <div className="alert-warn">No active visit found for this patient.</div>
       )}
@@ -369,13 +369,13 @@ function ReportsTab({ patientId }: { patientId: number }) {
 }
 
 function PrescriptionTab({ visitId }: { visitId: number }) {
-  const [items, setItems] = useState<any[]>([{ medicine: '', dosage: '', instructions: '', advice: '' }])
+  const [items, setItems] = useState<any[]>([{ medicine: '', dosage: '', frequency: '', duration: '', instructions: '', advice: '' }])
   const [msg, setMsg] = useState(''); const [err, setErr] = useState('')
 
   useEffect(() => { getPrescriptions(visitId).then(r => { if (r.data.length) setItems(r.data) }).catch(() => {}) }, [visitId])
 
   const setItem = (i: number, k: string) => (e: any) => setItems(items => items.map((item, idx) => idx === i ? { ...item, [k]: e.target.value } : item))
-  const add = () => setItems(i => [...i, { medicine: '', dosage: '', instructions: '', advice: '' }])
+  const add = () => setItems(i => [...i, { medicine: '', dosage: '', frequency: '', duration: '', instructions: '', advice: '' }])
   const remove = (i: number) => setItems(items => items.filter((_, idx) => idx !== i))
 
   const save = async () => {
@@ -396,6 +396,8 @@ function PrescriptionTab({ visitId }: { visitId: number }) {
             <div className="grid grid-cols-2 gap-3">
               <div className="form-group col-span-2"><label className="label">Medicine</label><input className="input" value={item.medicine} onChange={setItem(i, 'medicine')} /></div>
               <div className="form-group"><label className="label">Dosage</label><input className="input" value={item.dosage} onChange={setItem(i, 'dosage')} placeholder="e.g. 500mg BD" /></div>
+              <div className="form-group"><label className="label">Frequency</label><input className="input" value={item.frequency} onChange={setItem(i, 'frequency')} placeholder="e.g. twice daily" /></div>
+              <div className="form-group"><label className="label">Duration</label><input className="input" value={item.duration} onChange={setItem(i, 'duration')} placeholder="e.g. 5 days" /></div>
               <div className="form-group"><label className="label">Instructions</label><input className="input" value={item.instructions} onChange={setItem(i, 'instructions')} placeholder="e.g. After food" /></div>
               <div className="form-group col-span-2 flex items-end gap-2">
                 <div className="flex-1"><label className="label">Advice</label><input className="input" value={item.advice} onChange={setItem(i, 'advice')} /></div>
@@ -412,18 +414,18 @@ function PrescriptionTab({ visitId }: { visitId: number }) {
   )
 }
 
-function HistoryTab({ patientId, patient }: { patientId: number; patient: any }) {
+function HistoryTab({ patientId }: { patientId: number }) {
   const [visits, setVisits] = useState<any[]>([])
   useEffect(() => { patientVisits(patientId).then(r => setVisits(r.data)).catch(() => {}) }, [patientId])
 
   return (
     <div className="card">
-      <h3 className="section-title mb-4">Patient History</h3>
+      {/* <h3 className="section-title mb-4">Patient History</h3>
       <section className="card-sm mb-5" aria-label="Patient history from ABHA">
         <h4 className="font-medium text-green-800 mb-2">Patient history (from ABHA)</h4>
         <p className="text-sm text-slate-600">ABHA ID: {patient?.abha_number || 'Not provided'}</p>
         <p className="text-sm text-slate-600 mt-1">No records retrieved from ABHA. ABHA record access is not connected.</p>
-      </section>
+      </section> */}
       <h4 className="font-medium mb-3">History recorded at ClinSync</h4>
       <div className="flex flex-col gap-4">
         {visits.map((v: any) => (
@@ -435,7 +437,7 @@ function HistoryTab({ patientId, patient }: { patientId: number; patient: any })
             <div className="text-slate-600 text-xs mb-2">{v.department} · {v.doctor?.full_name} · {new Date(v.appointment_time).toLocaleDateString('en-IN')}</div>
             {v.vitals && <div className="text-slate-700 text-sm">Chief Complaint: {v.vitals.chief_complaint}</div>}
             <p>Diagnosis: {v.diagnosis || 'Not recorded'}</p><p className="text-slate-600">{v.notes}</p>
-            {v.prescriptions?.map((p: any, i: number) => <p key={i} className="text-sm">{p.medicine} · {p.dosage} · {p.instructions}</p>)}
+            {v.prescriptions?.map((p: any, i: number) => <p key={i} className="text-sm">{p.medicine} · {p.dosage} · {p.frequency} · {p.duration} · {p.instructions}</p>)}
             {v.orders?.map((o: any) => <p key={o.order_id} className="text-sm text-green-800">{o.order_id} · {o.status}</p>)}
             {v.conditions?.map((h: any, i: number) => <p key={i}>Condition: {h.condition} · Medicines: {h.medicines}</p>)}
           </div>
