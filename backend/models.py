@@ -158,6 +158,8 @@ class Prescription(Base):
     consultation_id: Mapped[int] = mapped_column(ForeignKey("consultations.id"))
     medicine: Mapped[str] = mapped_column(String(100))
     dosage: Mapped[Optional[str]] = mapped_column(String(100))
+    frequency: Mapped[Optional[str]] = mapped_column(String(100))
+    duration: Mapped[Optional[str]] = mapped_column(String(100))
     instructions: Mapped[Optional[str]] = mapped_column(Text)
     advice: Mapped[Optional[str]] = mapped_column(Text)
 

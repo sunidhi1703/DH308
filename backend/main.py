@@ -1,10 +1,17 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import inspect, text
 from database import engine
 import models
 
 models.Base.metadata.create_all(bind=engine)
+
+with engine.begin() as connection:
+    prescription_columns = {column["name"] for column in inspect(connection).get_columns("prescriptions")}
+    for column in ("frequency", "duration"):
+        if column not in prescription_columns:
+            connection.execute(text(f"ALTER TABLE prescriptions ADD COLUMN {column} VARCHAR(100)"))
 
 app = FastAPI(title="ClinSync", version="1.0.0")
 

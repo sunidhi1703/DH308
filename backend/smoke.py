@@ -8,7 +8,7 @@ with tempfile.TemporaryDirectory() as temp:
     import seed
     from main import app
     from fastapi.testclient import TestClient
-    from database import SessionLocal
+    from database import SessionLocal, engine
     from models import LabResult
     from routers.technician import _run_analyser
     client = TestClient(app)
@@ -38,7 +38,10 @@ with tempfile.TemporaryDirectory() as temp:
     assert not any(x['visit_id']==vid for x in call('doctor2','GET','doctor/dashboard')['my_patients'])
     assert not any(x['id']==vid for x in call('nurse1','GET','nurse/queue'))
     call('doctor1','POST',f'doctor/visits/{vid}/consultation',{'diagnosis':'Demo diagnosis'})
-    call('doctor1','POST',f'doctor/visits/{vid}/prescriptions',[{'medicine':'Demo medicine','dosage':'Demo only'}])
+    saved_prescriptions = call('doctor1','POST',f'doctor/visits/{vid}/prescriptions',[{'medicine':'Demo medicine','dosage':'Demo only','frequency':'twice daily','duration':'5 days'}])
+    assert saved_prescriptions[0]['frequency'] == 'twice daily'
+    assert saved_prescriptions[0]['duration'] == '5 days'
+    assert call('doctor1','GET',f'doctor/visits/{vid}/prescriptions') == saved_prescriptions
     for path in ['consultation','prescriptions']:
         call('doctor2','GET',f'doctor/visits/{vid}/{path}',status=403)
     call('doctor2','POST',f'doctor/visits/{vid}/prescriptions',[],403)
@@ -98,6 +101,11 @@ with tempfile.TemporaryDirectory() as temp:
         call('patho1','POST',f'pathologist/review/{a["assignment_id"]}',{'decision':'approved','notification_recorded':True})
         call('patho1','POST',f'pathologist/review/{a["assignment_id"]}',{'decision':'approved','notification_recorded':True},400)
     call('doctor1','POST',f'doctor/visits/{vid}/complete')
+    history = call('doctor1','GET',f'doctor/patients/{p["id"]}/visits')
+    history_visit = next(visit for visit in history if visit['id'] == vid)
+    history_prescription = history_visit['prescriptions'][0]
+    assert history_prescription['frequency'] == 'twice daily'
+    assert history_prescription['duration'] == '5 days'
     assert any(x['id']==p['id'] for x in call('doctor1','GET','doctor/patients'))
     assert any(x['id']==order['id'] for x in call('doctor1','GET',f'doctor/patients/{p["id"]}/lab-orders'))
     reports=call('doctor1','GET',f'doctor/patients/{p["id"]}/reports')
@@ -130,3 +138,5 @@ with tempfile.TemporaryDirectory() as temp:
     assert any(v['patient_id']==p['id'] and v['appointment_time'].startswith(follow_date) for v in call('recep1','GET','receptionist/visits'))
     print('PASS: follow-up request, reception booking, duplicate prevention and access restrictions')
     print('PASS: all roles, registration through release, rejection/recollection, hold/rerun, critical notification, immutable reports and access denials')
+    client.close()
+    engine.dispose()
