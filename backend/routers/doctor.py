@@ -109,7 +109,7 @@ def patient_visits(patient_id: int, db: Session = Depends(get_db), current_user:
             "department": v.department, "appointment_time": v.appointment_time,
             "diagnosis": v.consultation.diagnosis if v.consultation else None,
             "notes": v.consultation.notes if v.consultation else None,
-            "prescriptions": [{"medicine": p.medicine, "dosage": p.dosage, "instructions": p.instructions} for p in v.consultation.prescriptions] if v.consultation else [],
+            "prescriptions": [{"medicine": p.medicine, "dosage": p.dosage, "frequency": p.frequency, "duration": p.duration, "instructions": p.instructions} for p in v.consultation.prescriptions] if v.consultation else [],
             "orders": [{"order_id": o.order_id, "status": o.status.value} for o in v.lab_orders],
             "conditions": [{"condition": h.condition, "medicines": h.current_medicines} for h in db.query(MedicalHistory).filter_by(patient_id=patient_id).all()],
             "doctor": {"id": v.doctor.id, "full_name": v.doctor.full_name} if v.doctor else None,

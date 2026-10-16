@@ -131,6 +131,8 @@ class ConsultationOut(BaseModel):
 class PrescriptionCreate(BaseModel):
     medicine: str
     dosage: Optional[str] = None
+    frequency: Optional[str] = None
+    duration: Optional[str] = None
     instructions: Optional[str] = None
     advice: Optional[str] = None
 
@@ -139,6 +141,8 @@ class PrescriptionOut(BaseModel):
     id: int
     medicine: str
     dosage: Optional[str]
+    frequency: Optional[str]
+    duration: Optional[str]
     instructions: Optional[str]
     advice: Optional[str]
     model_config = {"from_attributes": True}
